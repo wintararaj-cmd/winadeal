@@ -1,0 +1,68 @@
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+/**
+ * Hash password using bcrypt
+ */
+export const hashPassword = async (password: string): Promise<string> => {
+    const salt = await bcrypt.genSalt(10);
+    return bcrypt.hash(password, salt);
+};
+
+/**
+ * Compare password with hashed password
+ */
+export const comparePassword = async (
+    password: string,
+    hashedPassword: string
+): Promise<boolean> => {
+    return bcrypt.compare(password, hashedPassword);
+};
+
+/**
+ * Generate JWT access token
+ */
+export const generateAccessToken = (userId: string, role: string): string => {
+    return jwt.sign(
+        { userId, role },
+        process.env.JWT_SECRET || 'your-secret-key',
+        { expiresIn: process.env.JWT_EXPIRES_IN || '15m' }
+    );
+};
+
+/**
+ * Generate JWT refresh token
+ */
+export const generateRefreshToken = (userId: string): string => {
+    return jwt.sign(
+        { userId },
+        process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key',
+        { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+    );
+};
+
+/**
+ * Verify JWT token
+ */
+export const verifyToken = (token: string, isRefreshToken: boolean = false): any => {
+    const secret = isRefreshToken
+        ? process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key'
+        : process.env.JWT_SECRET || 'your-secret-key';
+
+    return jwt.verify(token, secret);
+};
+
+/**
+ * Generate OTP (6 digits)
+ */
+export const generateOTP = (): string => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+/**
+ * Get OTP expiry time (default: 10 minutes)
+ */
+export const getOTPExpiry = (): Date => {
+    const minutes = parseInt(process.env.OTP_EXPIRES_IN || '10');
+    return new Date(Date.now() + minutes * 60 * 1000);
+};
