@@ -6,6 +6,12 @@ interface User {
     name: string;
     phone: string;
     role: string;
+    deliveryPartner?: {
+        id: string;
+        isOnline: boolean;
+        vehicleType?: string;
+        isVerified: boolean;
+    };
 }
 
 interface AuthState {

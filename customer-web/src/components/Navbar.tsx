@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, User, Search, MapPin } from 'lucide-react';
+import { ShoppingCart, User, Search, MapPin, Heart } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useCartStore } from '../store/cartStore';
+import { useFavoritesStore } from '../store/favoritesStore';
 
 export default function Navbar() {
     const { isAuthenticated, user, clearAuth } = useAuthStore();
     const { getTotalItems } = useCartStore();
+    const { favoriteShops, favoriteProducts } = useFavoritesStore();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    const totalFavorites = favoriteShops.length + favoriteProducts.length;
 
     const handleLogout = () => {
         clearAuth();
@@ -47,6 +51,20 @@ export default function Navbar() {
 
                     {/* Right side */}
                     <div className="flex items-center space-x-6">
+                        {/* Favorites */}
+                        <Link
+                            to="/favorites"
+                            className="relative flex items-center space-x-1 text-gray-700 hover:text-red-500 transition-colors"
+                        >
+                            <Heart className="w-6 h-6" />
+                            {totalFavorites > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                    {totalFavorites}
+                                </span>
+                            )}
+                            <span className="hidden md:inline">Favorites</span>
+                        </Link>
+
                         {/* Cart */}
                         <Link
                             to="/cart"
@@ -92,6 +110,13 @@ export default function Navbar() {
                                                 onClick={() => setIsDropdownOpen(false)}
                                             >
                                                 My Orders
+                                            </Link>
+                                            <Link
+                                                to="/favorites"
+                                                className="block px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-sky-600"
+                                                onClick={() => setIsDropdownOpen(false)}
+                                            >
+                                                My Favorites
                                             </Link>
                                             <button
                                                 onClick={() => {

@@ -36,6 +36,12 @@ export default function Profile() {
     });
 
     useEffect(() => {
+        if (!user) {
+            navigate('/login');
+        }
+    }, [user, navigate]);
+
+    useEffect(() => {
         if (activeTab === 'addresses') {
             fetchAddresses();
         }
@@ -46,9 +52,14 @@ export default function Profile() {
             const res = await addressService.getMyAddresses();
             const data = Array.isArray(res) ? res : (res.data || []);
             setAddresses(data);
-        } catch (error) {
-            console.error(error);
-            toast.error('Failed to fetch addresses');
+        } catch (error: any) {
+            console.error('Failed to fetch addresses:', error);
+            if (error.response?.status === 401) {
+                toast.error('Session expired. Please login again.');
+                // navigate('/login'); // Let the user act or interceptor handle it
+            } else {
+                toast.error('Failed to fetch addresses');
+            }
         }
     };
 
@@ -94,8 +105,7 @@ export default function Profile() {
     };
 
     if (!user) {
-        navigate('/login');
-        return null;
+        return null; // Navigation is handled in useEffect
     }
 
     return (

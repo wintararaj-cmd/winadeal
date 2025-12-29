@@ -197,47 +197,48 @@ export const getMyDeliveries = asyncHandler(async (req: Request, res: Response) 
 
     if (!partner) return errorResponse(res, 'Partner profile not found', 404);
 
-    const where: any = {
-        deliveryPartnerId: partner.id,
-    };
-
-    // Filter by order status based on 'active' vs 'history'
-    if (status === 'active') {
-        where.order = {
-            status: {
-                in: ['ASSIGNED', 'EN_ROUTE_TO_PICKUP', 'PICKED_UP', 'OUT_FOR_DELIVERY']
-            }
-        };
-    } else if (status === 'history') {
-        where.order = {
-            status: {
-                in: ['DELIVERED', 'CANCELLED']
-            }
-        };
-    }
-
-    const deliveries = await prisma.delivery.findMany({
-        where,
-        include: {
-            order: {
-                include: {
-                    shop: {
-                        select: { name: true, address: true, phone: true, latitude: true, longitude: true }
-                    },
-                    customer: {
-                        select: { name: true, phone: true }
-                    },
-                    deliveryAddress: true,
-                    orderItems: {
-                        include: { product: { select: { name: true } } }
+    try {
+        // Fetch all deliveries for this partner, including order details
+        const allDeliveries = await prisma.delivery.findMany({
+            where: {
+                deliveryPartnerId: partner.id,
+            },
+            include: {
+                order: {
+                    include: {
+                        shop: {
+                            select: { name: true, address: true, latitude: true, longitude: true }
+                        },
+                        customer: {
+                            select: { name: true, phone: true }
+                        },
+                        deliveryAddress: true,
+                        orderItems: {
+                            include: { product: { select: { name: true } } }
+                        }
                     }
                 }
-            }
-        },
-        orderBy: { createdAt: 'desc' }
-    });
+            },
+            orderBy: { createdAt: 'desc' }
+        });
 
-    successResponse(res, deliveries, 'Fetched my deliveries');
+        console.log(`[DEBUG] Found ${allDeliveries.length} total deliveries for partner ${partner.id}`);
+
+        // Filter in memory
+        let deliveries = allDeliveries;
+        if (status === 'active') {
+            const activeStatuses = ['ASSIGNED', 'EN_ROUTE_TO_PICKUP', 'PICKED_UP', 'OUT_FOR_DELIVERY'];
+            deliveries = allDeliveries.filter(d => d.order && activeStatuses.includes(d.order.status as string));
+        } else if (status === 'history') {
+            const historyStatuses = ['DELIVERED', 'CANCELLED'];
+            deliveries = allDeliveries.filter(d => d.order && historyStatuses.includes(d.order.status as string));
+        }
+
+        successResponse(res, deliveries, 'Fetched my deliveries');
+    } catch (error) {
+        console.error("Error in getMyDeliveries:", error);
+        return errorResponse(res, "Failed to fetch deliveries", 500, error);
+    }
 });
 
 // Toggle Online Status

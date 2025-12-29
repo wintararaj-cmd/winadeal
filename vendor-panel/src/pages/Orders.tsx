@@ -75,17 +75,24 @@ const Orders: React.FC = () => {
 
     useEffect(() => {
         fetchOrders();
+
+        // Poll every 15s to ensure data freshness
+        const interval = setInterval(() => {
+            fetchOrders(true);
+        }, 15000);
+
+        return () => clearInterval(interval);
     }, [statusFilter]);
 
     // Handle real-time updates
     useEffect(() => {
         if (lastEvent?.type === 'new_order' || lastEvent?.type === 'order_update') {
-            fetchOrders();
+            fetchOrders(true);
         }
     }, [lastEvent]);
 
-    const fetchOrders = async () => {
-        setLoading(true);
+    const fetchOrders = async (isBackground = false) => {
+        if (!isBackground) setLoading(true);
         try {
             const data = await orderService.getOrders({
                 status: statusFilter,
@@ -99,7 +106,7 @@ const Orders: React.FC = () => {
             })));
         } catch (error) {
             console.error("Failed to fetch orders", error);
-            toast.error("Failed to load orders");
+            if (!isBackground) toast.error("Failed to load orders");
         } finally {
             setLoading(false);
         }

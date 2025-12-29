@@ -13,7 +13,23 @@ const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
     (config) => {
-        const token = useAuthStore.getState().token;
+        let token = useAuthStore.getState().token;
+
+        // Fallback: Try to read from localStorage if zustand hasn't hydrated or is empty
+        if (!token) {
+            try {
+                const stored = localStorage.getItem('customer-auth-storage');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed.state && parsed.state.token) {
+                        token = parsed.state.token;
+                    }
+                }
+            } catch (e) {
+                // Ignore parsing errors
+            }
+        }
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -51,6 +67,12 @@ api.interceptors.response.use(
                 window.location.href = '/login';
                 return Promise.reject(refreshError);
             }
+        }
+
+        if (error.response?.status === 401 && originalRequest._retry) {
+            useAuthStore.getState().clearAuth();
+            window.location.href = '/login';
+            return Promise.reject(error);
         }
 
         return Promise.reject(error);

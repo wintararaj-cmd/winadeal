@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { orderService } from '../services/order.service';
 import type { Order as ApiOrder } from '../services/order.service';
 import { useSocketStore } from '../store/socketStore';
+import { OrderCardSkeleton } from '../components/Skeletons';
 
 interface Order extends Omit<ApiOrder, 'status' | 'deliveryAddress' | 'items'> {
     status: string;
@@ -31,20 +32,27 @@ export default function Orders() {
             return;
         }
         fetchOrders();
-    }, [isAuthenticated]);
+
+        // Poll every 15s
+        const interval = setInterval(() => {
+            fetchOrders(true);
+        }, 15000);
+
+        return () => clearInterval(interval);
+    }, [isAuthenticated, selectedTab]); // Re-fetch on tab change too? No, filtering is client side. Yes keep it simple.
 
     // Listen for socket updates
     useEffect(() => {
         if (lastEvent?.type === 'order_update') {
-            fetchOrders();
+            fetchOrders(true);
         }
     }, [lastEvent]);
 
-    const fetchOrders = async () => {
+    const fetchOrders = async (isBackground = false) => {
         try {
-            setLoading(true);
+            if (!isBackground) setLoading(true);
             const res = await orderService.getMyOrders();
-            const fetchedOrders = (res.orders || []).map((order: any) => ({
+            const fetchedOrders = (res.data?.orders || []).map((order: any) => ({
                 ...order,
                 items: order.orderItems.map((item: any) => ({
                     name: item.product.name,
@@ -54,9 +62,6 @@ export default function Orders() {
                 shop: {
                     name: order.shop.name
                 },
-                // Flatten address to string if needed or keep object. 
-                // The UI below uses {order.deliveryAddress}. If it's an object it will crash.
-                // Let's format it.
                 deliveryAddress: order.deliveryAddress ?
                     `${order.deliveryAddress.addressLine1}, ${order.deliveryAddress.city}` : 'N/A'
             }));
@@ -65,32 +70,34 @@ export default function Orders() {
         } catch (error) {
             console.error('Failed to fetch orders:', error);
         } finally {
-            setLoading(false);
+            if (!isBackground) setLoading(false);
         }
     };
 
     const getStatusIcon = (status: string) => {
+        const iconClass = "w-5 h-5";
         switch (status) {
             case 'PLACED':
             case 'PENDING':
-                return <Clock className="w-5 h-5 text-yellow-600" />;
+                return <Clock className={`${iconClass} text-yellow-600 animate-pulse`} />;
             case 'ACCEPTED':
             case 'CONFIRMED':
-                return <CheckCircle className="w-5 h-5 text-blue-600" />;
+                return <CheckCircle className={`${iconClass} text-blue-600`} />;
             case 'READY':
             case 'PREPARING':
-                return <Package className="w-5 h-5 text-purple-600" />;
+                return <Package className={`${iconClass} text-purple-600 animate-bounce`} />;
             case 'ASSIGNED':
             case 'PICKED_UP':
+            case 'EN_ROUTE_TO_PICKUP':
             case 'OUT_FOR_DELIVERY':
-                return <Truck className="w-5 h-5 text-indigo-600" />;
+                return <Truck className={`${iconClass} text-indigo-600 animate-pulse`} />;
             case 'DELIVERED':
-                return <CheckCircle className="w-5 h-5 text-green-600" />;
+                return <CheckCircle className={`${iconClass} text-green-600`} />;
             case 'CANCELLED':
             case 'REJECTED':
-                return <XCircle className="w-5 h-5 text-red-600" />;
+                return <XCircle className={`${iconClass} text-red-600`} />;
             default:
-                return <Clock className="w-5 h-5 text-gray-600" />;
+                return <Clock className={`${iconClass} text-gray-600`} />;
         }
     };
 
@@ -98,24 +105,25 @@ export default function Orders() {
         switch (status) {
             case 'PLACED':
             case 'PENDING':
-                return 'bg-yellow-100 text-yellow-800';
+                return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
             case 'ACCEPTED':
             case 'CONFIRMED':
-                return 'bg-blue-100 text-blue-800';
+                return 'bg-blue-100 text-blue-800 border border-blue-200';
             case 'READY':
             case 'PREPARING':
-                return 'bg-purple-100 text-purple-800';
+                return 'bg-purple-100 text-purple-800 border border-purple-200';
             case 'ASSIGNED':
             case 'PICKED_UP':
+            case 'EN_ROUTE_TO_PICKUP':
             case 'OUT_FOR_DELIVERY':
-                return 'bg-indigo-100 text-indigo-800';
+                return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
             case 'DELIVERED':
-                return 'bg-green-100 text-green-800';
+                return 'bg-green-100 text-green-800 border border-green-200';
             case 'CANCELLED':
             case 'REJECTED':
-                return 'bg-red-100 text-red-800';
+                return 'bg-red-100 text-red-800 border border-red-200';
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-gray-100 text-gray-800 border border-gray-200';
         }
     };
 
@@ -132,7 +140,7 @@ export default function Orders() {
 
     const filteredOrders = orders.filter(order => {
         if (selectedTab === 'active') {
-            return ['PLACED', 'PENDING', 'ACCEPTED', 'CONFIRMED', 'READY', 'PREPARING', 'ASSIGNED', 'PICKED_UP', 'OUT_FOR_DELIVERY'].includes(order.status);
+            return ['PLACED', 'PENDING', 'ACCEPTED', 'CONFIRMED', 'READY', 'PREPARING', 'ASSIGNED', 'EN_ROUTE_TO_PICKUP', 'PICKED_UP', 'OUT_FOR_DELIVERY'].includes(order.status);
         }
         if (selectedTab === 'completed') {
             return ['DELIVERED', 'CANCELLED', 'REJECTED'].includes(order.status);
@@ -142,10 +150,19 @@ export default function Orders() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-sky-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading orders...</p>
+            <div className="min-h-screen bg-gray-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-8">My Orders</h1>
+                    <div className="flex space-x-2 mb-6">
+                        {['all', 'active', 'completed'].map((tab) => (
+                            <div key={tab} className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse"></div>
+                        ))}
+                    </div>
+                    <div className="space-y-4">
+                        {[...Array(3)].map((_, i) => (
+                            <OrderCardSkeleton key={i} />
+                        ))}
+                    </div>
                 </div>
             </div>
         );
@@ -241,8 +258,11 @@ export default function Orders() {
                                     >
                                         Reorder
                                     </button>
-                                    {order.status === 'OUT_FOR_DELIVERY' && (
-                                        <button className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors">
+                                    {['CONFIRMED', 'ACCEPTED', 'PREPARING', 'READY', 'ASSIGNED', 'PICKED_UP', 'EN_ROUTE_TO_PICKUP', 'OUT_FOR_DELIVERY'].includes(order.status) && (
+                                        <button
+                                            onClick={() => navigate(`/orders/${order.id}/track`)}
+                                            className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
+                                        >
                                             Track Order
                                         </button>
                                     )}

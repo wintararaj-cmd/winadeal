@@ -33,13 +33,28 @@ export const authenticate = async (
 
         const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
-        // Handle common frontend bugs where token might be a string "undefined" or "null"
+        // File Logging Helper
+        const fs = require('fs');
+        const path = require('path');
+        const logFile = path.join(__dirname, '../../auth_debug.log');
+        const log = (msg: string) => fs.appendFileSync(logFile, `[${new Date().toISOString()}] ${msg}\n`);
+
+        // Handle common frontend bugs
         if (!token || token === 'undefined' || token === 'null') {
+            log('❌ No token provided or token is string literal "null"/"undefined"');
             return errorResponse(res, 'No token provided', 401);
         }
 
         // Verify token
-        const decoded = verifyToken(token);
+        let decoded;
+        try {
+            decoded = verifyToken(token);
+            log(`✅ Token decoded successfully. UserID: ${decoded.userId}`);
+        } catch (e: any) {
+            log(`❌ Token verification failed: ${e.message}. Token start: ${token.substring(0, 10)}...`);
+            console.error('Token verification failed:', e.message);
+            return errorResponse(res, 'Invalid token: ' + e.message, 401);
+        }
 
         // Check if user exists and is active
         const user = await prisma.user.findUnique({
@@ -52,12 +67,16 @@ export const authenticate = async (
         });
 
         if (!user) {
+            log(`❌ User NOT found in DB. ID: ${decoded.userId}`);
             return errorResponse(res, 'User not found', 404);
         }
 
         if (!user.isActive) {
+            log(`❌ User is inactive. ID: ${decoded.userId}`);
             return errorResponse(res, 'Account is deactivated', 403);
         }
+
+        log(`✅ Auth successful for User: ${user.id}`);
 
         // Attach user to request
         req.user = {

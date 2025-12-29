@@ -20,19 +20,19 @@ export interface DeliveryPartner {
 }
 
 export const getDeliveryPartners = async (params: any = {}) => {
-    const response = await api.get('/deliveries', { params });
+    const response = await api.get('/delivery', { params });
     // Response form: { partners: [], pagination: {} }
     // Or if different structure, adjust here.
     return response.data.data;
 };
 
 export const verifyDeliveryPartner = async (id: string, isVerified: boolean) => {
-    const response = await api.put(`/deliveries/${id}/verify`, { isVerified });
+    const response = await api.put(`/delivery/${id}/verify`, { isVerified });
     return response.data.data;
 };
 
 // For assignment (if used here or in orders service)
 export const assignOrderToPartner = async (orderId: string, partnerId: string) => {
-    const response = await api.post('/deliveries/assign', { orderId, partnerId });
+    const response = await api.post('/delivery/assign', { orderId, partnerId });
     return response.data.data;
 };

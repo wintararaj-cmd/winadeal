@@ -1,280 +1,267 @@
 import { useState } from 'react';
-import { Save, Bell, DollarSign, MapPin, Percent, Mail } from 'lucide-react';
+import { Save, Settings as SettingsIcon, DollarSign, Truck, ShoppingBag, Mail, Phone, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+interface PlatformSettings {
+    commissionRate: number;
+    deliveryFee: number;
+    minOrderValue: number;
+    maxDeliveryRadius: number;
+    taxRate: number;
+    supportEmail: string;
+    supportPhone: string;
+    platformName: string;
+    currency: string;
+}
+
 export default function Settings() {
-    const [settings, setSettings] = useState({
-        // General Settings
-        appName: 'WinADeal',
+    const [settings, setSettings] = useState<PlatformSettings>({
+        commissionRate: 10,
+        deliveryFee: 30,
+        minOrderValue: 100,
+        maxDeliveryRadius: 10,
+        taxRate: 5,
         supportEmail: 'support@winadeal.com',
-        supportPhone: '+91-9876543210',
-
-        // Order Settings
-        minOrderValue: 50,
-        maxOrderValue: 5000,
-        defaultDeliveryRadius: 5,
-        avgPrepTime: 30,
-
-        // Commission Settings
-        foodCommission: 20,
-        groceryCommission: 15,
-        otherCommission: 18,
-
-        // Delivery Settings
-        baseDeliveryFee: 30,
-        perKmCharge: 10,
-        freeDeliveryAbove: 500,
-
-        // Notification Settings
-        emailNotifications: true,
-        smsNotifications: true,
-        pushNotifications: true,
-        orderUpdates: true,
-        promotionalEmails: false,
+        supportPhone: '+91 1234567890',
+        platformName: 'WinADeal',
+        currency: 'INR',
     });
 
-    const handleChange = (field: string, value: any) => {
-        setSettings({ ...settings, [field]: value });
+    const [saving, setSaving] = useState(false);
+
+    const handleChange = (field: keyof PlatformSettings, value: string | number) => {
+        setSettings(prev => ({
+            ...prev,
+            [field]: value
+        }));
     };
 
-    const handleSave = () => {
-        // API call to save settings
-        toast.success('Settings saved successfully!');
+    const handleSave = async () => {
+        try {
+            setSaving(true);
+            // TODO: Call API to save settings
+            // await settingsService.updatePlatformSettings(settings);
+
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            toast.success('Settings saved successfully!');
+        } catch (error) {
+            toast.error('Failed to save settings');
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
-        <div className="p-6">
+        <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
             {/* Header */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-                <p className="text-gray-600 mt-1">Configure platform settings and preferences</p>
+            <div>
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                    <SettingsIcon className="w-8 h-8 text-primary-600" />
+                    Platform Settings
+                </h1>
+                <p className="text-gray-600 mt-1">Manage your platform configuration and preferences</p>
             </div>
 
-            <div className="space-y-6">
-                {/* General Settings */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Mail className="w-5 h-5 text-indigo-600" />
-                        General Settings
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                App Name
-                            </label>
-                            <input
-                                type="text"
-                                value={settings.appName}
-                                onChange={(e) => handleChange('appName', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Support Email
-                            </label>
-                            <input
-                                type="email"
-                                value={settings.supportEmail}
-                                onChange={(e) => handleChange('supportEmail', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Support Phone
-                            </label>
-                            <input
-                                type="tel"
-                                value={settings.supportPhone}
-                                onChange={(e) => handleChange('supportPhone', e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                        </div>
+            {/* General Settings */}
+            <div className="card">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <SettingsIcon className="w-5 h-5 text-gray-600" />
+                    General Settings
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Platform Name
+                        </label>
+                        <input
+                            type="text"
+                            value={settings.platformName}
+                            onChange={(e) => handleChange('platformName', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Currency
+                        </label>
+                        <select
+                            value={settings.currency}
+                            onChange={(e) => handleChange('currency', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        >
+                            <option value="INR">INR (₹)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                        </select>
                     </div>
                 </div>
+            </div>
 
-                {/* Order Settings */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <DollarSign className="w-5 h-5 text-green-600" />
-                        Order Settings
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Minimum Order Value (₹)
-                            </label>
+            {/* Commission & Fees */}
+            <div className="card">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-green-600" />
+                    Commission & Fees
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Default Commission Rate (%)
+                        </label>
+                        <div className="relative">
                             <input
                                 type="number"
-                                value={settings.minOrderValue}
-                                onChange={(e) => handleChange('minOrderValue', parseInt(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                value={settings.commissionRate}
+                                onChange={(e) => handleChange('commissionRate', parseFloat(e.target.value))}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Maximum Order Value (₹)
-                            </label>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Platform commission on each order
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Tax Rate (%)
+                        </label>
+                        <div className="relative">
                             <input
                                 type="number"
-                                value={settings.maxOrderValue}
-                                onChange={(e) => handleChange('maxOrderValue', parseInt(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                value={settings.taxRate}
+                                onChange={(e) => handleChange('taxRate', parseFloat(e.target.value))}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Default Delivery Radius (km)
-                            </label>
-                            <input
-                                type="number"
-                                value={settings.defaultDeliveryRadius}
-                                onChange={(e) => handleChange('defaultDeliveryRadius', parseInt(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Average Prep Time (minutes)
-                            </label>
-                            <input
-                                type="number"
-                                value={settings.avgPrepTime}
-                                onChange={(e) => handleChange('avgPrepTime', parseInt(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                            GST/Tax rate applied to orders
+                        </p>
                     </div>
                 </div>
+            </div>
 
-                {/* Commission Settings */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Percent className="w-5 h-5 text-purple-600" />
-                        Commission Rates
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Food Commission (%)
-                            </label>
+            {/* Order & Delivery Settings */}
+            <div className="card">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <ShoppingBag className="w-5 h-5 text-blue-600" />
+                    Order & Delivery Settings
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Minimum Order Value (₹)
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={settings.minOrderValue}
+                            onChange={(e) => handleChange('minOrderValue', parseFloat(e.target.value))}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                            Minimum amount required to place an order
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Base Delivery Fee (₹)
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={settings.deliveryFee}
+                            onChange={(e) => handleChange('deliveryFee', parseFloat(e.target.value))}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                            Standard delivery charge
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Maximum Delivery Radius (km)
+                        </label>
+                        <div className="relative">
                             <input
                                 type="number"
-                                value={settings.foodCommission}
-                                onChange={(e) => handleChange('foodCommission', parseInt(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                min="1"
+                                max="50"
+                                value={settings.maxDeliveryRadius}
+                                onChange={(e) => handleChange('maxDeliveryRadius', parseFloat(e.target.value))}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">km</span>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Grocery Commission (%)
-                            </label>
-                            <input
-                                type="number"
-                                value={settings.groceryCommission}
-                                onChange={(e) => handleChange('groceryCommission', parseInt(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Other Commission (%)
-                            </label>
-                            <input
-                                type="number"
-                                value={settings.otherCommission}
-                                onChange={(e) => handleChange('otherCommission', parseInt(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Maximum distance for delivery
+                        </p>
                     </div>
                 </div>
+            </div>
 
-                {/* Delivery Settings */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <MapPin className="w-5 h-5 text-blue-600" />
-                        Delivery Settings
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Base Delivery Fee (₹)
-                            </label>
-                            <input
-                                type="number"
-                                value={settings.baseDeliveryFee}
-                                onChange={(e) => handleChange('baseDeliveryFee', parseInt(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Per KM Charge (₹)
-                            </label>
-                            <input
-                                type="number"
-                                value={settings.perKmCharge}
-                                onChange={(e) => handleChange('perKmCharge', parseInt(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Free Delivery Above (₹)
-                            </label>
-                            <input
-                                type="number"
-                                value={settings.freeDeliveryAbove}
-                                onChange={(e) => handleChange('freeDeliveryAbove', parseInt(e.target.value))}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                            />
-                        </div>
+            {/* Contact Information */}
+            <div className="card">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <Phone className="w-5 h-5 text-purple-600" />
+                    Support Contact Information
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                            <Mail className="w-4 h-4" />
+                            Support Email
+                        </label>
+                        <input
+                            type="email"
+                            value={settings.supportEmail}
+                            onChange={(e) => handleChange('supportEmail', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                            <Phone className="w-4 h-4" />
+                            Support Phone
+                        </label>
+                        <input
+                            type="tel"
+                            value={settings.supportPhone}
+                            onChange={(e) => handleChange('supportPhone', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        />
                     </div>
                 </div>
+            </div>
 
-                {/* Notification Settings */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Bell className="w-5 h-5 text-orange-600" />
-                        Notification Settings
-                    </h2>
-                    <div className="space-y-4">
-                        {[
-                            { key: 'emailNotifications', label: 'Email Notifications' },
-                            { key: 'smsNotifications', label: 'SMS Notifications' },
-                            { key: 'pushNotifications', label: 'Push Notifications' },
-                            { key: 'orderUpdates', label: 'Order Status Updates' },
-                            { key: 'promotionalEmails', label: 'Promotional Emails' },
-                        ].map((item) => (
-                            <div key={item.key} className="flex items-center justify-between">
-                                <label className="text-sm font-medium text-gray-700">{item.label}</label>
-                                <button
-                                    onClick={() => handleChange(item.key, !settings[item.key as keyof typeof settings])}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings[item.key as keyof typeof settings] ? 'bg-indigo-600' : 'bg-gray-200'
-                                        }`}
-                                >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings[item.key as keyof typeof settings] ? 'translate-x-6' : 'translate-x-1'
-                                            }`}
-                                    />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Save Button */}
-                <div className="flex justify-end">
-                    <button
-                        onClick={handleSave}
-                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                    >
-                        <Save className="w-5 h-5" />
-                        Save Settings
-                    </button>
-                </div>
+            {/* Save Button */}
+            <div className="flex justify-end gap-4">
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                >
+                    Reset
+                </button>
+                <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg font-medium hover:from-primary-700 hover:to-primary-800 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                >
+                    <Save className="w-5 h-5" />
+                    {saving ? 'Saving...' : 'Save Settings'}
+                </button>
             </div>
         </div>
     );

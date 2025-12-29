@@ -7,7 +7,7 @@ import { useSocketStore } from '../store/socketStore';
 
 export default function Dashboard() {
     const user = useAuthStore((state) => state.user);
-    const [isOnline, setIsOnline] = useState(false); // Default offline? Fetch from API
+    const [isOnline, setIsOnline] = useState(user?.deliveryPartner?.isOnline || false);
     const [activeOrders, setActiveOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -15,23 +15,39 @@ export default function Dashboard() {
 
     useEffect(() => {
         fetchOrders();
+
+        // Poll every 15s
+        const interval = setInterval(() => {
+            fetchOrders(true);
+        }, 15000);
+
+        return () => clearInterval(interval);
     }, []);
 
     // Listen for socket events to refresh list
     useEffect(() => {
         if (lastEvent?.type === 'new_delivery') {
-            fetchOrders();
+            fetchOrders(true);
         }
     }, [lastEvent]);
 
-    const fetchOrders = async () => {
+    const fetchOrders = async (isBackground = false) => {
         try {
             const data = await deliveryService.getMyDeliveries('active');
             setActiveOrders(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
+            if (error.response?.status === 401) {
+                if (!isBackground) {
+                    toast.error("Session invalid. Please login again.");
+                    useAuthStore.getState().logout();
+                    window.location.href = '/login';
+                }
+                return;
+            }
+            if (!isBackground) toast.error("Failed to load orders");
         } finally {
-            setLoading(false);
+            if (!isBackground) setLoading(false);
         }
     };
 

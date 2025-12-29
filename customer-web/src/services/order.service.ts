@@ -58,7 +58,7 @@ export const orderService = {
         page?: number;
         limit?: number;
     }) => {
-        const response = await api.get('/api/v1/orders/my-orders', { params });
+        const response = await api.get('/api/v1/orders', { params });
         return response.data;
     },
 

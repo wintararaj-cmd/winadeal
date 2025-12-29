@@ -367,13 +367,79 @@ export const getShopStats = asyncHandler(async (req: Request, res: Response) => 
         });
     }
 
+    // Calculate today's stats
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todayOrders = await prisma.order.count({
+        where: {
+            shopId: id,
+            createdAt: {
+                gte: today,
+            },
+        },
+    });
+
+    const todayRevenueAggregate = await prisma.order.aggregate({
+        where: {
+            shopId: id,
+            status: 'DELIVERED',
+            createdAt: {
+                gte: today,
+            },
+        },
+        _sum: {
+            total: true,
+        },
+    });
+
+    // Calculate peak hours (group by hour)
+    const peakHoursData: { hour: string; orders: number }[] = [];
+    const hourlyOrders = await prisma.order.findMany({
+        where: {
+            shopId: id,
+            createdAt: {
+                gte: sevenDaysAgo,
+            },
+        },
+        select: {
+            createdAt: true,
+        },
+    });
+
+    // Group by hour
+    const hourCounts: { [key: string]: number } = {};
+    hourlyOrders.forEach(order => {
+        const hour = new Date(order.createdAt).getHours();
+        const hourKey = `${hour}:00`;
+        hourCounts[hourKey] = (hourCounts[hourKey] || 0) + 1;
+    });
+
+    // Get top 5 peak hours
+    const sortedHours = Object.entries(hourCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+    sortedHours.forEach(([hour, count]) => {
+        const hourNum = parseInt(hour);
+        const period = hourNum >= 12 ? 'PM' : 'AM';
+        const displayHour = hourNum > 12 ? hourNum - 12 : hourNum === 0 ? 12 : hourNum;
+        peakHoursData.push({
+            hour: `${displayHour} ${period}`,
+            orders: count,
+        });
+    });
+
     const stats = {
         totalOrders,
         activeOrders,
         deliveredOrders,
         totalRevenue: revenueAggregate._sum.total || 0,
+        todayOrders,
+        todayRevenue: todayRevenueAggregate._sum.total || 0,
         lowStockProducts,
         charts: chartData,
+        peakHours: peakHoursData,
     };
 
     successResponse(res, stats);

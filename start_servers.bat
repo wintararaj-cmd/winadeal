@@ -13,6 +13,9 @@ start "Customer Web" cmd /k "cd customer-web && npm run dev"
 echo Starting Delivery Web (Port 5175)...
 start "Delivery Web" cmd /k "cd delivery-web && npm run dev"
 
+echo Starting Vendor Panel...
+start "Vendor Panel" cmd /k "cd vendor-panel && npm run dev"
+
 echo ===================================================
 echo All servers are launching in separate windows.
 echo Please wait for them to initialize.

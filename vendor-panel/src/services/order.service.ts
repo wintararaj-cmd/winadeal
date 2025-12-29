@@ -64,7 +64,7 @@ export const orderService = {
 
     // Assign driver/partner to order
     assignDriver: async (orderId: string, partnerId: string) => {
-        const response = await api.post('/deliveries/assign', { orderId, partnerId });
+        const response = await api.post('/delivery/assign', { orderId, partnerId });
         return response.data.data;
     },
 
@@ -72,7 +72,7 @@ export const orderService = {
     getDrivers: async () => {
         // Fetch verified partners. 
         // In real app, filter by city/zone.
-        const response = await api.get('/deliveries?isVerified=true');
+        const response = await api.get('/delivery?isVerified=true');
         return response.data.data.partners;
     }
 };

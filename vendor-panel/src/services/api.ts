@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosError } from 'axios';
+import { useAuthStore } from '../store/authStore';
 
 let API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
@@ -58,13 +59,13 @@ api.interceptors.response.use(
                     // Retry original request
                     originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                     return api(originalRequest);
+                } else {
+                    useAuthStore.getState().clearAuth();
+                    return Promise.reject(error);
                 }
             } catch (refreshError) {
                 // Refresh failed, logout user
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-                localStorage.removeItem('user');
-                window.location.href = '/login';
+                useAuthStore.getState().clearAuth();
                 return Promise.reject(refreshError);
             }
         }

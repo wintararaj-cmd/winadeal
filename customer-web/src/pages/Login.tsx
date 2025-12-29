@@ -45,7 +45,7 @@ export default function Login() {
             const res = await authService.login(loginData);
 
             if (res.success) {
-                const { user, token, refreshToken } = res.data;
+                const { user, accessToken: token, refreshToken } = res.data;
                 setAuth(user, token, refreshToken);
                 toast.success('Login successful!');
 
@@ -80,8 +80,8 @@ export default function Login() {
                         <button
                             onClick={() => setUsePhone(true)}
                             className={`flex-1 py-2 rounded-lg font-medium transition-colors ${usePhone
-                                    ? 'bg-sky-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-sky-600 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                         >
                             Phone
@@ -89,8 +89,8 @@ export default function Login() {
                         <button
                             onClick={() => setUsePhone(false)}
                             className={`flex-1 py-2 rounded-lg font-medium transition-colors ${!usePhone
-                                    ? 'bg-sky-600 text-white'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-sky-600 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                         >
                             Email

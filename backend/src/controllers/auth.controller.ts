@@ -208,6 +208,19 @@ export const login = async (req: Request, res: Response) => {
             });
         }
 
+        let deliveryPartner = null;
+        if (user.role === 'DELIVERY') {
+            deliveryPartner = await prisma.deliveryPartner.findUnique({
+                where: { userId: user.id },
+                select: {
+                    id: true,
+                    isOnline: true,
+                    vehicleType: true,
+                    isVerified: true
+                }
+            });
+        }
+
         return successResponse(res, {
             user: {
                 id: user.id,
@@ -217,6 +230,7 @@ export const login = async (req: Request, res: Response) => {
                 role: user.role,
                 isVerified: user.isVerified,
                 shop: shop, // Include shop details
+                deliveryPartner: deliveryPartner,
             },
             accessToken,
             refreshToken,
@@ -437,6 +451,20 @@ export const getMe = async (req: Request, res: Response) => {
             });
         }
 
+        let deliveryPartner = null;
+        if (user.role === 'DELIVERY') {
+            deliveryPartner = await prisma.deliveryPartner.findUnique({
+                where: { userId: user.id },
+                select: {
+                    id: true,
+                    isOnline: true,
+                    vehicleType: true,
+                    licenseNumber: true,
+                    isVerified: true
+                }
+            });
+        }
+
         return successResponse(res, {
             id: user.id,
             name: user.name,
@@ -445,6 +473,7 @@ export const getMe = async (req: Request, res: Response) => {
             role: user.role,
             isVerified: user.isVerified,
             shop,
+            deliveryPartner,
         }, 'User details fetched successfully');
     } catch (error: any) {
         console.error('Get Me error:', error);

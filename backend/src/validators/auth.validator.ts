@@ -13,9 +13,10 @@ export const registerValidation = [
 
     body('phone')
         .trim()
+        .customSanitizer((value) => value.replace(/[\s-]/g, ''))
         .notEmpty()
         .withMessage('Phone number is required')
-        .matches(/^\+?[1-9]\d{9,14}$/)
+        .matches(/^\+?[0-9]\d{9,14}$/) // Updated regex to allow 0-9 start
         .withMessage('Invalid phone number format'),
 
     body('email')
@@ -44,7 +45,8 @@ export const loginValidation = [
     body('phone')
         .optional()
         .trim()
-        .matches(/^\+?[1-9]\d{9,14}$/)
+        .customSanitizer((value) => value.replace(/[\s-]/g, '')) // Remove spaces and dashes
+        .matches(/^\+?[0-9]\d{9,14}$/)
         .withMessage('Invalid phone number format'),
 
     body('email')
@@ -71,9 +73,10 @@ export const loginValidation = [
 export const verifyOTPValidation = [
     body('phone')
         .trim()
+        .customSanitizer((value) => value.replace(/[\s-]/g, ''))
         .notEmpty()
         .withMessage('Phone number is required')
-        .matches(/^\+?[1-9]\d{9,14}$/)
+        .matches(/^\+?[0-9]\d{9,14}$/)
         .withMessage('Invalid phone number format'),
 
     body('otp')
@@ -92,9 +95,10 @@ export const verifyOTPValidation = [
 export const requestOTPValidation = [
     body('phone')
         .trim()
+        .customSanitizer((value) => value.replace(/[\s-]/g, ''))
         .notEmpty()
         .withMessage('Phone number is required')
-        .matches(/^\+?[1-9]\d{9,14}$/)
+        .matches(/^\+?[0-9]\d{9,14}$/) // Updated regex
         .withMessage('Invalid phone number format'),
 ];
 

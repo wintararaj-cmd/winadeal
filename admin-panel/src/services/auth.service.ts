@@ -1,7 +1,8 @@
 import api from './api';
 
 export interface LoginCredentials {
-    phone: string;
+    phone?: string;
+    email?: string;
     password: string;
 }
 

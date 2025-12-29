@@ -29,6 +29,8 @@ app.use(cors({
         const allowedOrigins = [
             process.env.ADMIN_PANEL_URL || 'http://localhost:3000',
             process.env.CUSTOMER_WEB_URL || 'http://localhost:3001',
+            process.env.VENDOR_PANEL_URL || 'http://localhost:5174', // Vendor Panel
+            'http://localhost:5173', // Delivery App or Local Fallback
         ];
 
         if (allowedOrigins.includes(origin)) {
@@ -121,7 +123,7 @@ app.use('/api/v1/shops', shopRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/orders', orderRoutes);
-app.use('/api/v1/deliveries', deliveryRoutes);
+app.use('/api/v1/delivery', deliveryRoutes);
 app.use('/api/v1/addresses', addressRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 // app.use('/api/v1/admin', adminRoutes);

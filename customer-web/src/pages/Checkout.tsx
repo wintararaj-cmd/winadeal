@@ -59,10 +59,15 @@ export default function Checkout() {
             } else if (fetchedAddresses.length > 0) {
                 setSelectedAddress(fetchedAddresses[0].id);
             }
-        } catch (error) {
-            console.error(error);
-            // toast.error('Failed to load addresses'); 
-            // Optional: fallback to empty or demo if needed, but better to fail securely.
+        } catch (error: any) {
+            console.error('Failed to fetch addresses:', error);
+            if (error.response?.status === 401) {
+                toast.error('Session expired. Please login again.');
+                // Allow the interceptor to handle redirect, but just in case:
+                // navigate('/login');
+            } else {
+                toast.error('Failed to load addresses');
+            }
         }
     };
 

@@ -6,6 +6,7 @@ import { socketService } from '../services/socket.service';
 
 // Get orders
 export const getOrders = asyncHandler(async (req: Request, res: Response) => {
+    console.log(`[DEBUG] getOrders hit. User: ${req.user?.userId}, Role: ${req.user?.role}`);
     const { status, page = 1, limit = 20 } = req.query;
     const userId = req.user?.userId;
     const userRole = req.user?.role;
