@@ -13,9 +13,10 @@ import {
     CheckCircle,
     XCircle,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import toast from '../utils/toast';
 import { orderService } from '../services/order.service';
 import { useSocketStore } from '../store/socketStore';
+import soundService from '../services/soundNotification.service';
 
 interface Order {
     id: string;
@@ -84,9 +85,14 @@ const Orders: React.FC = () => {
         return () => clearInterval(interval);
     }, [statusFilter]);
 
-    // Handle real-time updates
+    // Handle real-time updates with sound notifications
     useEffect(() => {
-        if (lastEvent?.type === 'new_order' || lastEvent?.type === 'order_update') {
+        if (lastEvent?.type === 'new_order') {
+            // Play sound for new order
+            soundService.playNewOrderSound();
+            toast.order.newOrder(lastEvent.data?.orderNumber || 'New');
+            fetchOrders(true);
+        } else if (lastEvent?.type === 'order_update') {
             fetchOrders(true);
         }
     }, [lastEvent]);
@@ -115,7 +121,21 @@ const Orders: React.FC = () => {
     const handleUpdateStatus = async (orderId: string, newStatus: string) => {
         try {
             await orderService.updateStatus(orderId, newStatus);
-            toast.success(`Order marked as ${newStatus}`);
+
+            // Play appropriate sound based on status
+            if (newStatus === 'ACCEPTED') {
+                soundService.playOrderAcceptedSound();
+                toast.order.orderAccepted(selectedOrder?.orderNumber || orderId);
+            } else if (newStatus === 'READY') {
+                soundService.playOrderCompletedSound();
+                toast.order.orderReady(selectedOrder?.orderNumber || orderId);
+            } else if (newStatus === 'CANCELLED') {
+                soundService.playErrorSound();
+                toast.order.orderCancelled(selectedOrder?.orderNumber || orderId);
+            } else {
+                toast.success(`Order marked as ${newStatus}`);
+            }
+
             fetchOrders();
             if (selectedOrder?.id === orderId) {
                 // Update local selected order status to reflect change immediately

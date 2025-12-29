@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import Profile from './pages/Profile';
 import Earnings from './pages/Earnings';
+import ErrorBoundary from './components/ErrorBoundary';
 import { useAuthStore } from './store/authStore';
 import { useSocket } from './hooks/useSocket'; // Import
 
@@ -21,24 +22,26 @@ const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
 function App() {
   useSocket(); // Initialize Socket listener
   return (
-    <BrowserRouter>
-      <Toaster position="top-center" />
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Toaster position="top-center" />
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        <Route path="/" element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<Dashboard />} />
-          <Route path="history" element={<History />} />
-          <Route path="earnings" element={<Earnings />} />
-          <Route path="profile" element={<Profile />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<Dashboard />} />
+            <Route path="history" element={<History />} />
+            <Route path="earnings" element={<Earnings />} />
+            <Route path="profile" element={<Profile />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
